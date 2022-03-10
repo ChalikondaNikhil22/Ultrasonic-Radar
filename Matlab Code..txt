@@ -1,0 +1,52 @@
+% This script reads the data from Arduino serial Monitor into a variable in Matlab
+
+clear all; clc; close all;
+serialportlist("available");
+%%
+s= serialport("COM3",9600);  %% make sure serial monitor in IDE is closed
+%%
+% Open the serial port
+configureTerminator(s,"CR/LF");
+indata = struct("Data",zeros(1,2),"Count",1);
+%%
+flush(s);
+start = 0;
+refString = "Distance";
+
+while(~start)
+    data = readline(s);
+    if(strcmp(data,refString))
+        start = 1;
+    end
+end
+%pauseTime =  20;
+while (indata.Count < 1441)
+    % Read the ASCII data from the serialport object.
+   % pause(pauseTime);
+    data = readline(s);
+    temp = sscanf(data, "%f, %f")';
+    indata.Data(indata.Count,:) = temp; 
+    % Update the Count value of the serialport object.
+    indata.Count = indata.Count + 1;      
+
+end
+ 
+Dist = indata.Data(:,1)/50;
+Angle = indata.Data(:,2);
+n=length(Dist)/4;
+Dist1=zeros(1,n)
+Angle1=zeros(1,n)
+k=1;
+t=0;
+for i=1:n
+    Dist1(k)=Dist(t+1)+Dist(t+2)+Dist(t+3)+Dist(t+4);
+    Angle1(k)=Angle(t+1)+Angle(t+2)+Angle(t+3)+Angle(t+4);
+    k=k+1;
+    t=t+4;
+end
+dist=Dist1/4;
+angle=Angle1/4;
+
+figure
+plot(angle,dist,'r');
+thetalim([0 180])
